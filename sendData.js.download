@@ -1,0 +1,275 @@
+import * as zod from "../vendors/zod-3.22.4.js";
+
+const translations = {
+  INVALID_DATE: {
+    de: "Ungültiges Datum",
+    en: "Invalid date",
+    es: "Fecha inválida",
+    fr: "Date invalide",
+    it: "Data non valida",
+    nl: "Ongeldige datum",
+    pl: "Nieprawidłowa data",
+    pt: "Data inválida",
+    ru: "Неверная дата",
+    tr: "Geçersiz tarih",
+  },
+  INVALID_TIME: {
+    de: "Ungültige Zeit",
+    en: "Invalid time",
+    es: "Hora inválida",
+    fr: "Heure invalide",
+    it: "Ora non valida",
+    nl: "Ongeldige tijd",
+    pl: "Nieprawidłowy czas",
+    pt: "Tempo inválido",
+    ru: "Неверное время",
+    tr: "Geçersiz zaman",
+  },
+  INVALID_PHONE: {
+    de: "Ungültige Telefonnummer, überprüfen Sie, ob die Ländervorwahl angegeben ist.",
+    en: "Invalid phone number, check if country code is provided.",
+    es: "Número de teléfono inválido, compruebe si se ha proporcionado el código de país.",
+    fr: "Numéro de téléphone invalide, vérifiez si le code pays est fourni.",
+    it: "Numero di telefono non valido, controlla se è stato fornito il codice paese.",
+    nl: "Ongeldig telefoonnummer, controleer of de landcode is opgegeven.",
+    pl: "Nieprawidłowy numer telefonu, sprawdź czy podany jest kod kraju.",
+    pt: "Número de telefone inválido, verifique se o código do país é fornecido.",
+    ru: "Неверный номер телефона, проверьте, указан ли код страны.",
+    tr: "Geçersiz telefon numarası, ülke kodunun verilip verilmediğini kontrol edin.",
+  },
+  INVALID_EMAIL: {
+    de: "Ungültige E-Mail",
+    en: "Invalid email",
+    es: "Correo electrónico inválido",
+    fr: "E-mail invalide",
+    it: "Email non valida",
+    nl: "Ongeldige e-mail",
+    pl: "Nieprawidłowy email",
+    pt: "Email inválido",
+    ru: "Неверный адрес электронной почты",
+    tr: "Geçersiz e-posta",
+  },
+  REQUIRED_FIELD: {
+    de: "Dieses Feld ist erforderlich",
+    en: "This field is required",
+    es: "Este campo es obligatorio",
+    fr: "Ce champ est requis",
+    it: "Questo campo è obbligatorio",
+    nl: "Dit veld is verplicht",
+    pl: "To pole jest wymagane",
+    pt: "Este campo é obrigatório",
+    ru: "Это поле обязательно",
+    tr: "Bu alan gereklidir",
+  },
+  NOT_IN_PREVIEW: {
+    de: "Diese Funktion ist im Vorschaumodus nicht verfügbar.",
+    en: "This feature is not available in preview mode.",
+    es: "Esta función no está disponible en el modo de vista previa.",
+    fr: "Cette fonctionnalité n'est pas disponible en mode aperçu.",
+    it: "Questa funzionalità non è disponibile in modalità anteprima.",
+    nl: "Deze functie is niet beschikbaar in de voorbeeldmodus.",
+    pl: "Ta funkcja nie jest dostępna w trybie podglądu.",
+    pt: "Este recurso não está disponível no modo de visualização.",
+    ru: "Эта функция недоступна в режиме предварительного просмотра.",
+    tr: "Bu özellik önizleme modunda mevcut değil.",
+  },
+  ERROR_SENDING_MESSAGE: {
+    de: "Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+    en: "There was an error sending your message. Please try again later.",
+    es: "Se produjo un error al enviar su mensaje. Por favor, inténtelo de nuevo más tarde.",
+    fr: "Une erreur s'est produite lors de l'envoi de votre message. Veuillez réessayer plus tard.",
+    it: "Si è verificato un errore durante l'invio del messaggio. Si prega di riprovare più tardi.",
+    nl: "Er is een fout opgetreden bij het verzenden van uw bericht. Probeer het later opnieuw.",
+    pl: "Wystąpił błąd podczas wysyłania wiadomości. Spróbuj ponownie później.",
+    pt: "Ocorreu um erro ao enviar a sua mensagem. Por favor, tente novamente mais tarde.",
+    ru: "При отправке вашего сообщения произошла ошибка. Пожалуйста, попробуйте позже.",
+    tr: "Mesajınız gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+  },
+  NEW_FORM_SUBMISSION: {
+    de: "Neue Formularübermittlung",
+    en: "New form submission",
+    es: "Nueva presentación de formulario",
+    fr: "Nouvelle soumission de formulaire",
+    it: "Nuova presentazione del modulo",
+    nl: "Nieuwe formulierinzending",
+    pl: "Nowe zgłoszenie formularza",
+    pt: "Nova submissão de formulário",
+    ru: "Новая форма подачи",
+    tr: "Yeni form gönderimi",
+  },
+  MESSAGE_SENT_SUCCESSFULLY: {
+    de: "Ihre Nachricht wurde erfolgreich gesendet!",
+    en: "Your message has been sent sucessfully!",
+    es: "¡Tu mensaje ha sido enviado con éxito!",
+    fr: "Votre message a été envoyé avec succès!",
+    it: "Il tuo messaggio è stato inviato con successo!",
+    nl: "Uw bericht is succesvol verzonden!",
+    pl: "Twoja wiadomość została wysłana pomyślnie!",
+    pt: "Sua mensagem foi enviada com sucesso!",
+    ru: "Ваше сообщение успешно отправлено!",
+    tr: "Mesajınız başarıyla gönderildi!",
+  },
+};
+
+const getTranslation = (key) => {
+  const browserLanguage = navigator.language || navigator.userLanguage;
+
+  const language = browserLanguage.split("-")[0];
+  return translations[key][language] || translations[key].en;
+};
+
+const zodValidators = {
+  textOptional: zod.string().optional(),
+  textRequired: zod.string().nonempty({
+    message: getTranslation("REQUIRED_FIELD"),
+  }),
+  checkboxRequired: zod.string().transform((value) => value === "on", { message: getTranslation("REQUIRED_FIELD") }),
+  email: zod.string().email({
+    message: getTranslation("INVALID_EMAIL"),
+  }),
+  date: zod.string().refine((value) => !isNaN(Date.parse(value)), { message: getTranslation("INVALID_DATE") }),
+  time: zod.string().refine((value) => !isNaN(Date.parse(`01/01/2000 ${value}`)), {
+    message: getTranslation("INVALID_TIME"),
+  }),
+  phone: zod.string().regex(/^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/, {
+    message: getTranslation("INVALID_PHONE"),
+  }),
+};
+
+function validateFormData(values, validationSchema) {
+  try {
+    validationSchema.parse(values);
+    return [true, null];
+  } catch (error) {
+    if (error instanceof zod.ZodError) {
+      console.error("Validation errors:", error.errors);
+    } else {
+      console.error("Non validation error:", error);
+    }
+    return [false, error.errors];
+  }
+}
+
+const submitListener = (e) => {
+  e.preventDefault();
+  sendData(e.target.id);
+};
+
+const attachSubmitListenerToSingleForm = (form) => {
+  form.removeEventListener("submit", submitListener);
+  form.addEventListener("submit", submitListener);
+};
+
+export const attachSubmitFormListeners = () => {
+  [...document.getElementsByTagName("form")].forEach((form) => {
+    attachSubmitListenerToSingleForm(form);
+  });
+};
+
+export const sendData = async (formId) => {
+  if (document.querySelector('div[data-preview="true"]')) return alert(getTranslation("NOT_IN_PREVIEW"));
+
+  const form = document.getElementById(formId);
+  const submitButton = form.querySelectorAll("button")[0];
+  const formData = new FormData(form);
+  const formDataJson = Object.fromEntries(formData.entries());
+
+  const entries = [];
+  const inputs = form.querySelectorAll("input, textarea");
+  inputs.forEach((input) => {
+    const validator = input.getAttribute("data-validator");
+    const name = input.getAttribute("name");
+    entries.push([name, zodValidators[validator]]);
+  });
+  const selects = form.querySelectorAll("select");
+  selects.forEach((select) => {
+    const validator = select.getAttribute("data-validator");
+    const name = select.getAttribute("name");
+    entries.push([name, zodValidators[validator]]);
+  });
+
+  const validationSchema = zod.object(Object.fromEntries(entries));
+  const [isValid, errors] = validateFormData(formDataJson, validationSchema);
+
+  form.querySelectorAll("span").forEach((span) => {
+    if (span.id && span.id.startsWith(`${formId}-error-`)) {
+      span.remove();
+    }
+  });
+
+  if (!isValid) {
+    if (!errors) {
+      alert(getTranslation("ERROR_SENDING_MESSAGE"));
+
+      return {
+        status: "error",
+        data: [],
+      };
+    }
+
+    errors.forEach((error) => {
+      const key = error.path[0];
+      const errorSpan = document.getElementById(`${formId}-error-${key}`);
+      if (errorSpan) {
+        errorSpan.innerHTML = error.message;
+      } else {
+        const errorSpan = document.createElement("span");
+        errorSpan.id = `${formId}-error-${key}`;
+        errorSpan.innerHTML = error.message;
+        errorSpan.style.color = "red";
+        errorSpan.style.display = "block";
+        const input = form.querySelector(`[name="${key}"]`);
+        input.parentNode.insertBefore(errorSpan, input.nextSibling);
+      }
+    });
+
+    return {
+      status: "error",
+      data: [],
+    };
+  }
+
+  const metaTag = document.querySelector('meta[name="projectId"]');
+  const projectId = metaTag.getAttribute("content");
+
+  const resetForm = () => {
+    form.reset();
+  };
+
+  const disableButton = () => {
+    submitButton.disabled = true;
+    submitButton.style.cursor = "not-allowed";
+    submitButton.style.opacity = "0.5";
+  };
+
+  const enableButton = () => {
+    submitButton.disabled = false;
+    submitButton.style.cursor = "pointer";
+    submitButton.style.opacity = "1";
+  };
+
+  try {
+    disableButton();
+
+    await fetch(`/api/v1/template/form/submit`, {
+      method: "POST",
+      body: JSON.stringify({ formDataJson, formId, projectId }),
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      credentials: "include",
+    });
+
+    alert(getTranslation("MESSAGE_SENT_SUCCESSFULLY"));
+    return { status: "success", data: formDataJson };
+  } catch (error) {
+    alert(getTranslation("ERROR_SENDING_MESSAGE"));
+    return { status: "error", data: [] };
+  } finally {
+    resetForm();
+    enableButton();
+  }
+};
+
+attachSubmitFormListeners();
